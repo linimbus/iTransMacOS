@@ -16,7 +16,6 @@ final class PopupModel: ObservableObject {
 
     let origin: Origin
     let originalText: String
-    let targetLanguageName: String
 
     @Published var phase: Phase = .prompt
     @Published var translatedText: String = ""
@@ -26,10 +25,9 @@ final class PopupModel: ObservableObject {
 
     private var flashWorkItem: DispatchWorkItem?
 
-    init(originalText: String, origin: Origin, targetLanguageName: String) {
+    init(originalText: String, origin: Origin) {
         self.originalText = originalText
         self.origin = origin
-        self.targetLanguageName = targetLanguageName
     }
 
     func flashCopied() {
@@ -46,11 +44,13 @@ final class PopupModel: ObservableObject {
 @MainActor
 struct PopupView: View {
     @ObservedObject var model: PopupModel
+    @ObservedObject var settings: AppSettings
     var onTranslate: () -> Void
     var onRetry: () -> Void
     var onClose: () -> Void
     var onCopy: (String) -> Void
     var onOpenSettings: () -> Void
+    var onTargetLanguageChanged: () -> Void
 
     private var title: String {
         model.origin == .screenshot ? "截图识别" : "划词翻译"
@@ -87,6 +87,9 @@ struct PopupView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
         )
+        .onChange(of: settings.targetLanguageID) { _, _ in
+            onTargetLanguageChanged()
+        }
     }
 
     private var header: some View {
@@ -94,11 +97,15 @@ struct PopupView: View {
             Image(systemName: iconName)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .allowsHitTesting(false)
             Text(title)
                 .font(.system(size: 11.5, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .allowsHitTesting(false)
 
             Spacer()
+
+            targetLanguageMenu
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
@@ -110,6 +117,40 @@ struct PopupView: View {
             .buttonStyle(.plain)
             .help("关闭 (Esc)")
         }
+        .background(WindowDragArea())
+        .padding(.vertical, -3)
+        .contentShape(Rectangle())
+    }
+
+    private var targetLanguageMenu: some View {
+        Menu {
+            ForEach(Languages.targets) { language in
+                Button {
+                    settings.targetLanguageID = language.id
+                } label: {
+                    if settings.targetLanguageID == language.id {
+                        Label(language.name, systemImage: "checkmark")
+                    } else {
+                        Text(language.name)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "globe")
+                    .font(.system(size: 9))
+                Text(settings.targetLanguageName)
+                    .font(.system(size: 10.5, weight: .medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 7, weight: .bold))
+            }
+            .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .disabled(model.phase == .loading)
+        .help("目标语言")
     }
 
     private var originalBlock: some View {
@@ -148,10 +189,6 @@ struct PopupView: View {
             .controlSize(.regular)
 
             Spacer()
-
-            Text("→ \(model.targetLanguageName)")
-                .font(.system(size: 10.5))
-                .foregroundStyle(.tertiary)
         }
     }
 
@@ -172,7 +209,7 @@ struct PopupView: View {
             Divider().opacity(0.5)
 
             HStack(spacing: 6) {
-                Text("译文 · \(model.targetLanguageName)")
+                Text("译文 · \(settings.targetLanguageName)")
                     .font(.system(size: 10.5, weight: .semibold))
                     .foregroundStyle(.secondary)
 

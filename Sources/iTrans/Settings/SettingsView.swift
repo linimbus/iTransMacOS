@@ -18,6 +18,11 @@ struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     var onTestConnection: () async -> ConnectionTestOutcome
 
+    /// Marketing version from Info.plist, shown in the About section.
+    private static var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0"
+    }
+
     @State private var testState: TestState = .idle
     @State private var showAdvanced = false
     @State private var accessibilityGranted = PermissionManager.accessibilityGranted
@@ -80,7 +85,7 @@ struct SettingsView: View {
                 }
             }
 
-            Picker("源语言 / OCR 语言", selection: $settings.sourceLanguageID) {
+            Picker("源语言 / OCR / 音频语言", selection: $settings.sourceLanguageID) {
                 ForEach(Languages.sources) { language in
                     Text(language.name).tag(language.id)
                 }
@@ -239,12 +244,6 @@ struct SettingsView: View {
                 }
             }
 
-            Picker("识别语言", selection: $settings.speechLanguageID) {
-                ForEach(Languages.sources) { language in
-                    Text(SpeechLanguage.displayName(for: language.id)).tag(language.id)
-                }
-            }
-
             HStack {
                 Text("快捷键")
                 Spacer()
@@ -259,7 +258,7 @@ struct SettingsView: View {
         } header: {
             Text("实时语音翻译")
         } footer: {
-            Text("\(settings.speechEngine.summary) 系统声音/指定应用需要屏幕录制权限；麦克风需要麦克风权限。")
+            Text("\(settings.speechEngine.summary) 音频语言与 OCR 源语言共用同一设置。系统声音/指定应用需要屏幕录制权限；麦克风需要麦克风权限。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -491,7 +490,7 @@ struct SettingsView: View {
     private var aboutSection: some View {
         Section {
             HStack {
-                Text("iTrans 1.0.0")
+                Text("iTrans \(Self.appVersion)")
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button("恢复全部默认设置") {

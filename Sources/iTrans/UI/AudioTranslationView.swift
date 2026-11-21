@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 struct AudioTranslationView: View {
     @ObservedObject var model: AudioTranslationViewModel
+    @ObservedObject var settings: AppSettings
 
     var onStop: () -> Void
     var onStart: () -> Void
@@ -25,8 +26,24 @@ struct AudioTranslationView: View {
             Divider()
             translationPane
         }
-        .frame(minWidth: 520, minHeight: 360)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .padding(14)
+        .frame(
+            minWidth: 520,
+            maxWidth: .infinity,
+            minHeight: 360,
+            maxHeight: .infinity
+        )
+        .background(VisualEffectBackground())
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
+        )
+        .overlay(alignment: .bottomTrailing) {
+            resizeGrip
+                .padding(.trailing, 9)
+                .padding(.bottom, 9)
+        }
     }
 
     // MARK: - Header
@@ -44,13 +61,44 @@ struct AudioTranslationView: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
+            .allowsHitTesting(false)
 
             Spacer()
 
-            Text("\(model.speechEngineName) · \(model.targetDescription)")
-                .font(.system(size: 10))
-                .foregroundStyle(.tertiary)
-                .lineLimit(1)
+            HStack(spacing: 5) {
+                Text("音频语言")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .allowsHitTesting(false)
+
+                Menu {
+                    ForEach(Languages.sources) { language in
+                        Button {
+                            settings.sourceLanguageID = language.id
+                        } label: {
+                            if settings.sourceLanguageID == language.id {
+                                Label(SpeechLanguage.displayName(for: language.id), systemImage: "checkmark")
+                            } else {
+                                Text(SpeechLanguage.displayName(for: language.id))
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(SpeechLanguage.shortDisplayName(for: settings.sourceLanguageID))
+                            .font(.system(size: 10.5, weight: .medium))
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 7, weight: .bold))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("音频语言与 OCR 源语言共用同一设置；修改后会自动重新开始识别")
+            }
+
+            targetLanguageMenu
 
             Button(model.isListening ? "停止" : "开始") {
                 if model.isListening {
@@ -61,11 +109,54 @@ struct AudioTranslationView: View {
             }
             .controlSize(.small)
 
-            Button("关闭", action: onClose)
-                .controlSize(.small)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18, height: 18)
+                    .background(Circle().fill(Color.primary.opacity(0.08)))
+            }
+            .buttonStyle(.plain)
+            .help("关闭")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .background(WindowDragArea())
+        .padding(.vertical, -2)
+        .contentShape(Rectangle())
+    }
+
+    private var targetLanguageMenu: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "arrow.right")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(.tertiary)
+                .allowsHitTesting(false)
+
+            Menu {
+                ForEach(Languages.targets) { language in
+                    Button {
+                        settings.targetLanguageID = language.id
+                    } label: {
+                        if settings.targetLanguageID == language.id {
+                            Label(language.name, systemImage: "checkmark")
+                        } else {
+                            Text(language.name)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 3) {
+                    Text(settings.targetLanguageName)
+                        .font(.system(size: 10.5, weight: .medium))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7, weight: .bold))
+                }
+                .foregroundStyle(.secondary)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("目标语言")
+        }
     }
 
     private func errorBanner(_ error: String) -> some View {
@@ -160,7 +251,7 @@ struct AudioTranslationView: View {
             paneHeader(
                 title: "实时翻译",
                 icon: "character.bubble",
-                trailing: model.targetDescription,
+                trailing: settings.targetLanguageName,
                 copyText: model.translationForCopy,
                 copied: $copiedTranslation,
                 copyHelp: "拷贝全部译文"
@@ -255,9 +346,9 @@ struct AudioTranslationView: View {
             .opacity(copyText.isEmpty ? 0.35 : 1)
             .help(copyHelp)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.45))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 7)
+        .background(Color.primary.opacity(0.035))
     }
 
     private func copyToPasteboard(_ text: String, copied: Binding<Bool>) {
@@ -275,5 +366,18 @@ struct AudioTranslationView: View {
             .font(.system(size: 12))
             .foregroundStyle(.tertiary)
             .padding(.vertical, 4)
+    }
+
+    /// Subtle affordance hinting that the window can be resized from its corner.
+    private var resizeGrip: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            ForEach(0..<3, id: \.self) { index in
+                Capsule()
+                    .fill(Color.primary.opacity(0.16))
+                    .frame(width: CGFloat(4 + index * 4), height: 1.2)
+            }
+        }
+        .padding(6)
+        .allowsHitTesting(false)
     }
 }

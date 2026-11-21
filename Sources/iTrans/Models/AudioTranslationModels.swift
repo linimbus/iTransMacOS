@@ -77,6 +77,13 @@ enum SpeechLanguage {
         return Languages.name(for: id)
     }
 
+    static func shortDisplayName(for id: String) -> String {
+        if id == "auto" {
+            return "自动"
+        }
+        return Languages.name(for: id)
+    }
+
     private static func supportedLocale(matching identifier: String) -> String {
         let supported = SFSpeechRecognizer.supportedLocales()
         if supported.contains(where: { $0.identifier.caseInsensitiveCompare(identifier) == .orderedSame }) {

@@ -13,6 +13,8 @@ final class PopupPanel: NSPanel {
             defer: false
         )
         isFloatingPanel = true
+        isMovable = true
+        isMovableByWindowBackground = true
         level = .popUpMenu
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         backgroundColor = .clear
@@ -52,6 +54,7 @@ final class AutoSizingHostingView<Content: View>: NSHostingView<Content> {
 @MainActor
 final class PopupController: NSObject, NSWindowDelegate {
     private let popupWidth: CGFloat = 420
+    private let settings: AppSettings
 
     private var panel: PopupPanel?
     private var model: PopupModel?
@@ -63,6 +66,11 @@ final class PopupController: NSObject, NSWindowDelegate {
     var requestTranslate: ((PopupModel) -> Void)?
     var requestSettings: (() -> Void)?
     var onDismiss: (() -> Void)?
+
+    init(settings: AppSettings) {
+        self.settings = settings
+        super.init()
+    }
 
     var currentModel: PopupModel? { model }
     var isVisible: Bool { panel?.isVisible == true }
@@ -89,6 +97,7 @@ final class PopupController: NSObject, NSWindowDelegate {
 
         let root = PopupView(
             model: model,
+            settings: settings,
             onTranslate: { [weak self] in self?.requestTranslate?(model) },
             onRetry: { [weak self] in self?.requestTranslate?(model) },
             onClose: { [weak self] in self?.close() },
@@ -99,6 +108,12 @@ final class PopupController: NSObject, NSWindowDelegate {
             },
             onOpenSettings: { [weak self] in
                 self?.requestSettings?()
+            },
+            onTargetLanguageChanged: { [weak self] in
+                guard let self, let current = self.currentModel else { return }
+                if current.phase == .success || current.phase == .failure {
+                    self.requestTranslate?(current)
+                }
             }
         )
 

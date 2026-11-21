@@ -6,6 +6,8 @@ A native macOS menu bar translation app with **screenshot OCR translation**, **s
 
 The app lives in the menu bar with no Dock icon and no window during normal use. Global hotkeys trigger each feature, and results appear near the pointer or in a dedicated live speech translation window. You can switch between **macOS system translation** and **LibreTranslate** at any time.
 
+Current version: **1.1.0**. See [CHANGELOG.md](CHANGELOG.md) for the release history.
+
 ## Features
 
 - **Screenshot OCR**: press the hotkey, drag a screen region, run on-device Vision OCR, translate automatically, and show the result near the pointer
@@ -13,13 +15,14 @@ The app lives in the menu bar with no Dock icon and no window during normal use.
 - **Live speech translation**: listen to system audio, a specific app, or the microphone, then transcribe and translate in real time in a dedicated split window
 - **Two translation engines**: macOS system translation (default) or LibreTranslate
 - **One-click copy**: copy the source text and translation from the result panel or from either pane of the live translation window
+- **Movable and resizable windows**: the OCR/selection result panel can be dragged; the live speech window can be dragged, resized from any edge or corner, and remembers its size next time
 - **Automatic API discovery**: read OpenAPI 3 / Swagger 2.0 documents and match the translation endpoint and fields automatically
 - **Multi-display / Retina**: select on any display and crop using native screen pixels
 - **Menu bar app**: hidden Dock icon via `LSUIElement`; the menu shows the active engine and permission status
 
 ## Screenshots
 
-The OCR and selection screenshots use demo text. Actual translations depend on the selected region and the active translation engine.
+The OCR, selection, and live speech screenshots use demo language content. Actual translations depend on the selected region or audio and the active translation engine.
 
 ### Screenshot OCR
 
@@ -44,7 +47,7 @@ The OCR and selection screenshots use demo text. Actual translations depend on t
 3. iTrans recognizes the text locally with Vision and automatically translates it.
 4. The translation appears in a floating panel near the pointer. If translation fails, retry from the panel or open the API settings.
 
-OCR always translates automatically. The OCR languages follow the “Source language / OCR language” setting.
+OCR always translates automatically. The target language can be changed from the result panel header, and the current result is retranslated immediately. The OCR language and audio language share the same “Source language / OCR / Audio language” setting.
 
 ## Selection Translation
 
@@ -53,13 +56,13 @@ OCR always translates automatically. The OCR languages follow the “Source lang
 3. iTrans reads the selection through Accessibility. If the app does not support it, iTrans simulates ⌘C and restores the previous clipboard contents.
 4. By default a “Translate” button appears near the pointer. Enable “Auto-translate after selection” to skip the button and show the translation immediately.
 
-The result panel supports copying the source or translation, retrying, and dismissal with `Esc` or a click outside.
+The result panel header can change the target language, and the panel can be dragged by its header. Close it with the × button, `Esc`, or a click outside. It supports copying the source or translation and retrying.
 
 ## Live Speech Translation
 
-The default shortcut is `⌥⌘L`. Press it again, click “Close” in the window, or close the title bar to stop and dismiss the session; “Stop” stops listening but keeps the current content. Pressing the shortcut again starts a new session.
+The default shortcut is `⌥⌘L`. Press it again or click the × button in the window header to stop and dismiss the session; “Stop” stops listening but keeps the current content. Pressing the shortcut again starts a new session.
 
-The live window is a standalone floating window split into two halves:
+The live window uses the same rounded floating-panel style as the OCR/selection result panel. It can be dragged and is split into two halves. Drag any edge or corner to resize it (minimum 520 × 360; a subtle grip marks the bottom-right corner). The window size and position are remembered and restored the next time it opens.
 
 - **Top**: live transcription. Volatile (not yet finalized) text is shown in a secondary color.
 - **Bottom**: live translation. Finalized segments are appended as they arrive, with a live preview for the current volatile text.
@@ -67,6 +70,9 @@ The live window is a standalone floating window split into two halves:
   - Copy the full transcription.
   - Copy the full translation.
   - The copied text includes what is currently visible. The button briefly changes to “Copied”.
+- **Audio language**: the window header provides an audio-language menu. It shares the “Source language / OCR / Audio language” setting. Changing it restarts speech recognition, keeps the current transcript, and updates Settings immediately.
+- **Target language**: choose it from the OCR/selection result panel header, the live speech window header, or Settings. All three share the same setting; new translations use the new target, and the current OCR/selection result panel is retranslated automatically.
+- All language choices are stored in the shared settings and stay in sync with the Settings window.
 
 Audio sources (default: System audio):
 
@@ -74,7 +80,7 @@ Audio sources (default: System audio):
 - **Specific application**: capture audio from a single app such as a meeting app or browser.
 - **Microphone**: use the default input device. Useful for in-person meetings and voice input.
 
-Speech recognition uses Apple's on-device `SpeechAnalyzer` / `SpeechTranscriber` on macOS 26+, and does not depend on Siri or Dictation. You can follow the system language or choose Chinese, English, Japanese, Korean, and more. One speech engine is currently built in; the design allows adding third-party engines later.
+Speech recognition uses Apple's on-device `SpeechAnalyzer` / `SpeechTranscriber` on macOS 26+, and does not depend on Siri or Dictation. Choose the audio language from the window menu or follow the system; it shares the OCR/source language setting. Chinese, English, Japanese, Korean, and more are available. One speech engine is currently built in; the design allows adding third-party engines later.
 
 ## Translation Engines
 
@@ -118,9 +124,20 @@ Click a shortcut field in Settings to record a new combination. At least one mod
 # Build only
 ./scripts/build_app.sh
 open build/iTrans.app
+
+# Create release artifacts (DMG / ZIP / SHA256)
+./scripts/release.sh
 ```
 
 The app is generated at `build/iTrans.app` and is ad-hoc signed. You can also open `Package.swift` directly in Xcode.
+
+`release.sh` writes the release artifacts to `dist/`:
+
+- `iTrans-<version>.dmg`: the app plus an `Applications` shortcut; drag to install.
+- `iTrans-<version>.zip`: a compressed app bundle for distribution or archiving.
+- `SHA256SUMS.txt`: SHA-256 checksums for both artifacts.
+
+Because the app is ad-hoc signed, Gatekeeper may block the first launch. Allow it in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine /Applications/iTrans.app`.
 
 For daily use, copy `iTrans.app` to `/Applications` to keep TCC permission records stable. After rebuilding, permissions may need to be granted again.
 
@@ -144,7 +161,7 @@ The menu bar menu shows Accessibility and Screen Recording status. The Settings 
 
 - Translation engine: macOS System Translation / LibreTranslate
 - Target language
-- Source language / OCR language
+- Source language / OCR / Audio language
 - Auto-translate after selection (hide the Translate button)
 
 ### Live Speech Translation
@@ -153,7 +170,7 @@ The menu bar menu shows Accessibility and Screen Recording status. The Settings 
 - Audio source: System audio / Specific application / Microphone
 - For a specific app: choose a running app and refresh the list
 - For microphone: shows the current default input device
-- Recognition language
+- The audio language is set by “Source language / OCR / Audio language” above and stays in sync with the live window menu
 - Live speech translation shortcut
 
 ### System Permissions
@@ -268,6 +285,9 @@ ITRANS_SERVER=http://127.0.0.1:5017 ITRANS_DEMO_AUTO=1 \
 # Show a selection translation result panel
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-selection
 
+# Show a populated live speech window (no permissions needed)
+./build/iTrans.app/Contents/MacOS/iTrans --demo-audio-window
+
 # Show the region-selection overlay (no Screen Recording permission needed)
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-select
 
@@ -300,7 +320,7 @@ docker-compose.yaml  LibreTranslate Docker deployment
 
 ## Known Limitations
 
-- Screenshot OCR uses Vision. Auto-detection uses Simplified Chinese, Traditional Chinese, and English. The OCR language follows the “Source language / OCR language” setting.
+- Screenshot OCR uses Vision. Auto-detection uses Simplified Chinese, Traditional Chinese, and English. The OCR language follows the “Source language / OCR / Audio language” setting.
 - Selection translation depends on the target app supporting `AXSelectedText`. When unsupported, iTrans falls back to a simulated ⌘C and therefore needs Accessibility permission.
 - macOS system translation requires the corresponding language pack. If the download fails, switch to LibreTranslate.
 - Live speech recognition uses the on-device speech models in macOS 26+. If a model is not ready, iTrans prepares it when listening starts; this may require a network download.

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 
 @MainActor
@@ -24,6 +25,7 @@ final class AudioTranslationController {
     private var translationQueue: [PendingTranslation] = []
     private var translationWorker: Task<Void, Never>?
     private var liveTranslationTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
 
     init(
         settings: AppSettings,
@@ -33,6 +35,23 @@ final class AudioTranslationController {
         self.settings = settings
         self.translator = translator
         self.systemTranslator = systemTranslator
+
+        settings.$sourceLanguageID
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.sourceLanguageDidChange()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func sourceLanguageDidChange() {
+        guard isListening, windowController?.isVisible == true else { return }
+        stopListening()
+        sessionGeneration += 1
+        beginCapture(generation: sessionGeneration)
     }
 
     var isWindowVisible: Bool {
@@ -41,6 +60,36 @@ final class AudioTranslationController {
 
     var isActive: Bool {
         isWindowVisible
+    }
+
+    /// Development helper used by `--demo-audio-window` for documentation screenshots.
+    func showDemoWindow() {
+        guard !isWindowVisible else { return }
+
+        let model = AudioTranslationViewModel()
+        model.reset(
+            source: "系统声音",
+            target: settings.targetLanguageName,
+            speechEngine: settings.speechEngine.displayName
+        )
+        let samples: [(String, String)] = [
+            ("Hello everyone.", "大家好。"),
+            ("This is a live translation demo.", "这是一个实时翻译演示。"),
+            ("The weather is nice today.", "今天天气很好。")
+        ]
+        for sample in samples {
+            let id = model.appendSegment(sample.0)
+            model.setTranslation(sample.1, for: id)
+        }
+        model.markStarted(status: "正在监听 · 系统声音")
+        self.model = model
+
+        let windowController = AudioTranslationWindowController()
+        windowController.onClose = { [weak self] in self?.windowDidClose() }
+        windowController.onStop = { [weak self] in self?.stopListening() }
+        windowController.onStart = { [weak self] in self?.restartSession() }
+        windowController.show(model: model, settings: settings)
+        self.windowController = windowController
     }
 
     // MARK: - Toggle
@@ -74,7 +123,7 @@ final class AudioTranslationController {
         windowController.onClose = { [weak self] in self?.windowDidClose() }
         windowController.onStop = { [weak self] in self?.stopListening() }
         windowController.onStart = { [weak self] in self?.restartSession() }
-        windowController.show(model: model)
+        windowController.show(model: model, settings: settings)
         self.windowController = windowController
 
         beginCapture(generation: generation)
@@ -150,7 +199,7 @@ final class AudioTranslationController {
                 }
 
                 try await speech.start(
-                    localeIdentifier: SpeechLanguage.localeIdentifier(for: self.settings.speechLanguageID)
+                    localeIdentifier: SpeechLanguage.localeIdentifier(for: self.settings.sourceLanguageID)
                 )
 
                 let capture: any AudioCaptureLifecycle
@@ -409,9 +458,7 @@ final class AudioTranslationController {
     // MARK: - Translation routing
 
     private func translate(_ text: String) async throws -> String {
-        let sourceID = settings.speechLanguageID == "auto"
-            ? settings.sourceLanguageID
-            : settings.speechLanguageID
+        let sourceID = settings.sourceLanguageID
 
         if settings.isSystemEngine {
             return try await systemTranslator.translateSilently(

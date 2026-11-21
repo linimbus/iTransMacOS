@@ -14,7 +14,7 @@ final class AppCoordinator: NSObject {
         translator: translator,
         systemTranslator: systemTranslator
     )
-    private let popup = PopupController()
+    private lazy var popup = PopupController(settings: settings)
     private let screenCapture = ScreenCaptureService()
     private let ocrService = OCRService()
     private let selectedTextService = SelectedTextService()
@@ -80,8 +80,17 @@ final class AppCoordinator: NSObject {
         }
     }
 
-    /// Development helper: `iTrans --demo-audio` starts the audio translation window.
+    /// Development helpers:
+    /// `iTrans --demo-audio` starts a real audio session.
+    /// `iTrans --demo-audio-window` shows a populated window for documentation.
     private func handleDemoAudioIfNeeded() {
+        if CommandLine.arguments.contains("--demo-audio-window") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.audioTranslationController.showDemoWindow()
+            }
+            return
+        }
+
         guard CommandLine.arguments.contains("--demo-audio") else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             self?.toggleAudioTranslation()
@@ -249,8 +258,7 @@ final class AppCoordinator: NSObject {
         let point = NSEvent.mouseLocation
         let model = PopupModel(
             originalText: text,
-            origin: origin,
-            targetLanguageName: settings.targetLanguageName
+            origin: origin
         )
         popup.present(model: model, at: point)
 

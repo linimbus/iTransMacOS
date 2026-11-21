@@ -47,7 +47,6 @@ final class AppSettings: ObservableObject {
         static let selectionShortcut = "selectionShortcut"
         static let audioShortcut = "audioShortcut"
         static let speechEngineID = "speechEngineID"
-        static let speechLanguageID = "speechLanguageID"
         static let audioSourceModeID = "audioSourceModeID"
         static let audioAppBundleID = "audioAppBundleID"
         static let audioAppName = "audioAppName"
@@ -98,10 +97,6 @@ final class AppSettings: ObservableObject {
 
     @Published var speechEngineID: String {
         didSet { defaults.set(speechEngineID, forKey: Keys.speechEngineID) }
-    }
-
-    @Published var speechLanguageID: String {
-        didSet { defaults.set(speechLanguageID, forKey: Keys.speechLanguageID) }
     }
 
     @Published var audioSourceModeID: String {
@@ -157,7 +152,6 @@ final class AppSettings: ObservableObject {
         selectionShortcut = Self.loadShortcut(defaults, key: Keys.selectionShortcut) ?? .selectionDefault
         audioShortcut = Self.loadShortcut(defaults, key: Keys.audioShortcut) ?? .audioDefault
         speechEngineID = defaults.string(forKey: Keys.speechEngineID) ?? SpeechEngineKind.apple.rawValue
-        speechLanguageID = defaults.string(forKey: Keys.speechLanguageID) ?? "auto"
         audioSourceModeID = defaults.string(forKey: Keys.audioSourceModeID) ?? AudioSourceMode.system.rawValue
         audioAppBundleID = defaults.string(forKey: Keys.audioAppBundleID) ?? ""
         audioAppName = defaults.string(forKey: Keys.audioAppName) ?? ""
@@ -298,7 +292,6 @@ final class AppSettings: ObservableObject {
         selectionShortcut = .selectionDefault
         audioShortcut = .audioDefault
         speechEngineID = SpeechEngineKind.apple.rawValue
-        speechLanguageID = "auto"
         audioSourceModeID = AudioSourceMode.system.rawValue
         audioAppBundleID = ""
         audioAppName = ""
