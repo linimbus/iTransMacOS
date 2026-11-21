@@ -64,7 +64,20 @@ final class AppCoordinator: NSObject {
 
         handleDemoArgumentsIfNeeded()
         handleDemoSelectIfNeeded()
+        handleDemoSelectionIfNeeded()
         handleDemoAudioIfNeeded()
+    }
+
+    /// Development helper: `iTrans --demo-selection` shows a selection translation panel.
+    private func handleDemoSelectionIfNeeded() {
+        guard CommandLine.arguments.contains("--demo-selection") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.presentPopup(
+                text: "Select text anywhere on your screen, and the translation appears right next to your cursor. No extra windows, no copy-paste.",
+                origin: .selection,
+                forceTranslate: true
+            )
+        }
     }
 
     /// Development helper: `iTrans --demo-audio` starts the audio translation window.

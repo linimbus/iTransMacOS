@@ -17,6 +17,26 @@
 - **多显示器 / Retina**：在任意屏幕框选，按实际像素裁剪
 - **菜单栏常驻**：通过 `LSUIElement` 隐藏 Dock 图标，菜单中显示当前引擎与权限状态
 
+## 截图
+
+以下 OCR / 划词截图为演示文本，实际翻译结果取决于所选区域和翻译引擎。
+
+### 截图 OCR 翻译
+
+[![截图 OCR 翻译](docs/screenshots/ocr-translation.png)](docs/screenshots/ocr-translation.png)
+
+### 划词翻译
+
+[![划词翻译](docs/screenshots/selection-translation.png)](docs/screenshots/selection-translation.png)
+
+### 实时语音翻译
+
+[![实时语音翻译](docs/screenshots/live-speech-translation.png)](docs/screenshots/live-speech-translation.png)
+
+### 设置与翻译引擎
+
+[![设置与翻译引擎](docs/screenshots/settings.png)](docs/screenshots/settings.png)
+
 ## 截图 OCR
 
 1. 按 `⌥⌘O`。
@@ -245,6 +265,9 @@ python3 scripts/mock_server.py 5017
 ITRANS_SERVER=http://127.0.0.1:5017 ITRANS_DEMO_AUTO=1 \
   ./build/iTrans.app/Contents/MacOS/iTrans --demo
 
+# 显示划词翻译结果面板
+./build/iTrans.app/Contents/MacOS/iTrans --demo-selection
+
 # 显示区域选择蒙层（不需要屏幕录制权限）
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-select
 
@@ -270,6 +293,7 @@ Sources/iTrans/
   Settings/       配置存储与设置界面
   UI/             状态栏、悬浮面板、实时语音翻译窗口、快捷键录制控件
 Resources/        Info.plist、AppIcon.icns
+docs/screenshots/ README 截图
 scripts/          构建脚本、模拟后端
 docker-compose.yaml  LibreTranslate Docker 部署
 ```

@@ -17,6 +17,26 @@ The app lives in the menu bar with no Dock icon and no window during normal use.
 - **Multi-display / Retina**: select on any display and crop using native screen pixels
 - **Menu bar app**: hidden Dock icon via `LSUIElement`; the menu shows the active engine and permission status
 
+## Screenshots
+
+The OCR and selection screenshots use demo text. Actual translations depend on the selected region and the active translation engine.
+
+### Screenshot OCR
+
+[![Screenshot OCR](docs/screenshots/ocr-translation.png)](docs/screenshots/ocr-translation.png)
+
+### Selection Translation
+
+[![Selection translation](docs/screenshots/selection-translation.png)](docs/screenshots/selection-translation.png)
+
+### Live Speech Translation
+
+[![Live speech translation](docs/screenshots/live-speech-translation.png)](docs/screenshots/live-speech-translation.png)
+
+### Settings and Translation Engines
+
+[![Settings and translation engines](docs/screenshots/settings.png)](docs/screenshots/settings.png)
+
 ## Screenshot OCR
 
 1. Press `⌥⌘O`.
@@ -245,6 +265,9 @@ python3 scripts/mock_server.py 5017
 ITRANS_SERVER=http://127.0.0.1:5017 ITRANS_DEMO_AUTO=1 \
   ./build/iTrans.app/Contents/MacOS/iTrans --demo
 
+# Show a selection translation result panel
+./build/iTrans.app/Contents/MacOS/iTrans --demo-selection
+
 # Show the region-selection overlay (no Screen Recording permission needed)
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-select
 
@@ -270,6 +293,7 @@ Sources/iTrans/
   Settings/       Settings storage and UI
   UI/             Status bar, floating result panel, live speech window, shortcut recorder
 Resources/        Info.plist, AppIcon.icns
+docs/screenshots/ README screenshots
 scripts/          Build scripts, mock backend
 docker-compose.yaml  LibreTranslate Docker deployment
 ```
