@@ -1,0 +1,58 @@
+# LibreTranslate for iTrans
+#
+# Start:
+#   docker compose up -d
+#   docker compose logs -f libretranslate
+#
+# Health / languages:
+#   curl http://127.0.0.1:5000/health
+#   curl http://127.0.0.1:5000/languages
+#
+# iTrans → Settings → LibreTranslate → Server URL:
+#   http://127.0.0.1:5000        (Docker on the same Mac)
+#   http://<LAN-IP>:5000         (Docker on another machine)
+#
+# If port 5000 is already in use, map e.g. "5001:5000" and use
+# http://127.0.0.1:5001 in iTrans instead.
+
+services:
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    # For reproducibility, pin a version instead:
+    # image: libretranslate/libretranslate:v1.9.6
+    container_name: libretranslate
+    restart: unless-stopped
+
+    # Apple Silicon: uncomment only if the image has no arm64 build.
+    # This runs the amd64 image through emulation and is slower.
+    # platform: linux/amd64
+
+    ports:
+      # host:container
+      # To restrict access to this Mac only, use "127.0.0.1:5000:5000".
+      - "5000:5000"
+
+    environment:
+      # Keep the web UI and Swagger spec available at /docs/ and /spec.
+      - LT_DISABLE_WEB_UI=false
+
+      # Limit loaded models to the languages iTrans needs.
+      # Add more codes if you use other target languages, e.g.:
+      # LT_LOAD_ONLY=en,zh-Hans,zh-Hant,ja,ko,fr,de,es,ru,pt,it
+      - LT_LOAD_ONLY=en,zh-Hans,zh-Hant
+
+      # Update the language models when the container starts.
+      # The first start may take several minutes.
+      - LT_UPDATE_MODELS=true
+
+      # iTrans does not send an API key, so leave API-key mode disabled.
+      # Only expose this service on a trusted LAN.
+      # - LT_API_KEYS=true
+      # - LT_API_KEYS_DB_PATH=/app/db/api_keys.db
+
+    volumes:
+      # Persist downloaded language models between restarts.
+      - libretranslate_models:/home/libretranslate/.local:rw
+
+volumes:
+  libretranslate_models:

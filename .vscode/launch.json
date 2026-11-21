@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:itrans_macos}",
+            "name": "Debug iTrans",
+            "target": "iTrans",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug iTrans"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:itrans_macos}",
+            "name": "Release iTrans",
+            "target": "iTrans",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release iTrans"
+        }
+    ]
+}
