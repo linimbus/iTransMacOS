@@ -17,7 +17,6 @@ struct AudioTranslationView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider()
             if let error = model.errorMessage {
                 errorBanner(error)
                 Divider()
@@ -199,7 +198,6 @@ struct AudioTranslationView: View {
                 copied: $copiedTranscript,
                 copyHelp: "拷贝全部转写"
             )
-            Divider().opacity(0.4)
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -256,7 +254,6 @@ struct AudioTranslationView: View {
                 copied: $copiedTranslation,
                 copyHelp: "拷贝全部译文"
             )
-            Divider().opacity(0.4)
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -346,9 +343,8 @@ struct AudioTranslationView: View {
             .opacity(copyText.isEmpty ? 0.35 : 1)
             .help(copyHelp)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 14)
         .padding(.vertical, 7)
-        .background(Color.primary.opacity(0.035))
     }
 
     private func copyToPasteboard(_ text: String, copied: Binding<Bool>) {

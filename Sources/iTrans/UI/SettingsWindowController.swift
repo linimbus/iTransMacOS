@@ -23,10 +23,13 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         )
 
         let hosting = NSHostingController(rootView: view)
+        // Keep the window size under our control instead of the SwiftUI ideal size.
+        hosting.sizingOptions = []
         let window = NSWindow(contentViewController: hosting)
         window.title = "iTrans 设置"
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.setContentSize(NSSize(width: 620, height: 760))
+        window.contentMinSize = NSSize(width: 560, height: 480)
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.center()

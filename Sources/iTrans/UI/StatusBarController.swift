@@ -10,6 +10,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var ocrItem: NSMenuItem?
     private var selectionItem: NSMenuItem?
     private var audioItem: NSMenuItem?
+    private var manualItem: NSMenuItem?
     private var autoTranslateItem: NSMenuItem?
     private var engineItem: NSMenuItem?
     private var permissionItem: NSMenuItem?
@@ -25,7 +26,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             let image = NSImage(systemSymbolName: "character.bubble", accessibilityDescription: "iTrans")
             image?.isTemplate = true
             button.image = image
-            button.toolTip = "iTrans · 截图 / 划词翻译"
+            button.toolTip = "iTrans · OCR / 划词 / 语音 / 手动翻译"
         }
 
         buildMenu()
@@ -33,6 +34,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         settings.$ocrShortcut
             .merge(with: settings.$selectionShortcut)
             .merge(with: settings.$audioShortcut)
+            .merge(with: settings.$manualShortcut)
             .sink { [weak self] _ in self?.refreshMenuItems() }
             .store(in: &cancellables)
 
@@ -58,6 +60,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         selection.target = self
         menu.addItem(selection)
         selectionItem = selection
+
+        let manual = NSMenuItem(title: "手动翻译", action: #selector(toggleManualTranslation), keyEquivalent: "")
+        manual.target = self
+        menu.addItem(manual)
+        manualItem = manual
 
         let audio = NSMenuItem(title: "实时语音翻译", action: #selector(toggleAudioTranslation), keyEquivalent: "")
         audio.target = self
@@ -101,6 +108,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         ocrItem?.title = "截图识别 OCR（\(settings.ocrShortcut.displayString)）"
         selectionItem?.title = "划词翻译（\(settings.selectionShortcut.displayString)）"
         audioItem?.title = "实时语音翻译（\(settings.audioShortcut.displayString)）"
+        manualItem?.title = "手动翻译（\(settings.manualShortcut.displayString)）"
         autoTranslateItem?.state = settings.autoTranslate ? .on : .off
         engineItem?.title = "翻译引擎：\(settings.translationEngine.displayName)"
 
@@ -123,6 +131,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func toggleAudioTranslation() {
         coordinator?.toggleAudioTranslation()
+    }
+
+    @objc private func toggleManualTranslation() {
+        coordinator?.toggleManualTranslation()
     }
 
     @objc private func toggleAutoTranslate() {

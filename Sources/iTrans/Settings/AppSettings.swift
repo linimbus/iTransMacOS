@@ -46,6 +46,7 @@ final class AppSettings: ObservableObject {
         static let ocrShortcut = "ocrShortcut"
         static let selectionShortcut = "selectionShortcut"
         static let audioShortcut = "audioShortcut"
+        static let manualShortcut = "manualShortcut"
         static let speechEngineID = "speechEngineID"
         static let audioSourceModeID = "audioSourceModeID"
         static let audioAppBundleID = "audioAppBundleID"
@@ -91,6 +92,10 @@ final class AppSettings: ObservableObject {
 
     @Published var audioShortcut: HotKeyShortcut {
         didSet { store(audioShortcut, key: Keys.audioShortcut) }
+    }
+
+    @Published var manualShortcut: HotKeyShortcut {
+        didSet { store(manualShortcut, key: Keys.manualShortcut) }
     }
 
     // MARK: - Audio / speech translation
@@ -151,6 +156,7 @@ final class AppSettings: ObservableObject {
         ocrShortcut = Self.loadShortcut(defaults, key: Keys.ocrShortcut) ?? .ocrDefault
         selectionShortcut = Self.loadShortcut(defaults, key: Keys.selectionShortcut) ?? .selectionDefault
         audioShortcut = Self.loadShortcut(defaults, key: Keys.audioShortcut) ?? .audioDefault
+        manualShortcut = Self.loadShortcut(defaults, key: Keys.manualShortcut) ?? .manualDefault
         speechEngineID = defaults.string(forKey: Keys.speechEngineID) ?? SpeechEngineKind.apple.rawValue
         audioSourceModeID = defaults.string(forKey: Keys.audioSourceModeID) ?? AudioSourceMode.system.rawValue
         audioAppBundleID = defaults.string(forKey: Keys.audioAppBundleID) ?? ""
@@ -291,6 +297,7 @@ final class AppSettings: ObservableObject {
         ocrShortcut = .ocrDefault
         selectionShortcut = .selectionDefault
         audioShortcut = .audioDefault
+        manualShortcut = .manualDefault
         speechEngineID = SpeechEngineKind.apple.rawValue
         audioSourceModeID = AudioSourceMode.system.rawValue
         audioAppBundleID = ""

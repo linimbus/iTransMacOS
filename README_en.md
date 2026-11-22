@@ -2,20 +2,21 @@
 
 English | [简体中文](README.md)
 
-A native macOS menu bar translation app with **screenshot OCR translation**, **selection translation**, and **live speech translation**.
+A native macOS menu bar translation app with **screenshot OCR translation**, **selection translation**, **manual text translation**, and **live speech translation**.
 
 The app lives in the menu bar with no Dock icon and no window during normal use. Global hotkeys trigger each feature, and results appear near the pointer or in a dedicated live speech translation window. You can switch between **macOS system translation** and **LibreTranslate** at any time.
 
-Current version: **1.1.0**. See [CHANGELOG.md](CHANGELOG.md) for the release history.
+Current version: **1.2.0**. See [CHANGELOG.md](CHANGELOG.md) for the release history.
 
 ## Features
 
 - **Screenshot OCR**: press the hotkey, drag a screen region, run on-device Vision OCR, translate automatically, and show the result near the pointer
 - **Selection translation**: read the selected text through the Accessibility API (with a simulated ⌘C fallback), translate it, and show the result
+- **Manual translation**: open a text translation window with a hotkey, type or paste text, let the source language auto-detect or pick one, and change the target language at any time
 - **Live speech translation**: listen to system audio, a specific app, or the microphone, then transcribe and translate in real time in a dedicated split window
 - **Two translation engines**: macOS system translation (default) or LibreTranslate
 - **One-click copy**: copy the source text and translation from the result panel or from either pane of the live translation window
-- **Movable and resizable windows**: the OCR/selection result panel can be dragged; the live speech window can be dragged, resized from any edge or corner, and remembers its size next time
+- **Movable and resizable windows**: the OCR/selection result panel can be dragged; the manual translation and live speech windows can be dragged, resized from any edge or corner, and remember their size next time
 - **Automatic API discovery**: read OpenAPI 3 / Swagger 2.0 documents and match the translation endpoint and fields automatically
 - **Multi-display / Retina**: select on any display and crop using native screen pixels
 - **Menu bar app**: hidden Dock icon via `LSUIElement`; the menu shows the active engine and permission status
@@ -31,6 +32,10 @@ The OCR, selection, and live speech screenshots use demo language content. Actua
 ### Selection Translation
 
 [![Selection translation](docs/screenshots/selection-translation.png)](docs/screenshots/selection-translation.png)
+
+### Manual Translation
+
+[![Manual translation](docs/screenshots/manual-translation.png)](docs/screenshots/manual-translation.png)
 
 ### Live Speech Translation
 
@@ -57,6 +62,16 @@ OCR always translates automatically. The target language can be changed from the
 4. By default a “Translate” button appears near the pointer. Enable “Auto-translate after selection” to skip the button and show the translation immediately.
 
 The result panel header can change the target language, and the panel can be dragged by its header. Close it with the × button, `Esc`, or a click outside. It supports copying the source or translation and retrying.
+
+## Manual Translation
+
+The default shortcut is `⌥⌘M`. It opens a text translation window where you can type or paste text and press `⌘↩` or click **Translate**.
+
+- **Source language**: the header menu defaults to “Auto detect”; you can also pin a language. It shares the OCR/audio language setting.
+- **Target language**: switch it in the header. It stays in sync with the OCR/selection panel, the live speech window, and Settings.
+- Changing the source or target language retranslates the current result automatically.
+- Copy the translation with one click, or clear the window to start over. Press `Esc` or click the × button to close it.
+- The window uses the same rounded floating-panel style as the live speech window, can be dragged and resized, and remembers its size and position.
 
 ## Live Speech Translation
 
@@ -108,6 +123,7 @@ Switch engines in Settings. The choice applies to OCR, selection translation, an
 | --- | --- |
 | Screenshot OCR | `⌥⌘O` |
 | Selection translation | `⌥⌘T` |
+| Manual translation | `⌥⌘M` |
 | Live speech translation | `⌥⌘L` |
 
 Click a shortcut field in Settings to record a new combination. At least one modifier key is required. Settings are stored in `UserDefaults` (`com.linimbus.itrans`).
@@ -189,7 +205,7 @@ To self-host LibreTranslate on this Mac or a LAN server, see “Advanced: Deploy
 
 ### Other
 
-- Shortcut recording
+- Shortcut recording (screenshot OCR / selection translation / manual translation / live speech translation)
 - Restore default settings
 - Version information
 
@@ -285,6 +301,9 @@ ITRANS_SERVER=http://127.0.0.1:5017 ITRANS_DEMO_AUTO=1 \
 # Show a selection translation result panel
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-selection
 
+# Show a populated manual translation window
+./build/iTrans.app/Contents/MacOS/iTrans --demo-manual
+
 # Show a populated live speech window (no permissions needed)
 ./build/iTrans.app/Contents/MacOS/iTrans --demo-audio-window
 
@@ -311,7 +330,8 @@ Sources/iTrans/
                   global hotkeys, system translation, LibreTranslate,
                   system-audio/microphone capture, live speech recognition and translation
   Settings/       Settings storage and UI
-  UI/             Status bar, floating result panel, live speech window, shortcut recorder
+  UI/             Status bar, floating result panel, manual translation window,
+                  live speech window, shortcut recorder
 Resources/        Info.plist, AppIcon.icns
 docs/screenshots/ README screenshots
 scripts/          Build scripts, mock backend
@@ -328,6 +348,7 @@ docker-compose.yaml  LibreTranslate Docker deployment
 - Microphone mode uses the default input device. Change it in “System Settings → Sound → Input”.
 - The OCR/selection result panel displays up to 24 lines of translation. Use “Copy translation” for the full text.
 - Only text translation APIs are supported. File upload and streaming (SSE) endpoints are not supported.
+- The manual translation window keeps the last input and translation while the app is running; use **Clear** to reset it.
 - Launch at login and translation history are not implemented.
 - The live speech translation window keeps only the current session; closing the window clears it.
 - The app is ad-hoc signed. System permissions may be reset after a rebuild and must be granted again.

@@ -15,6 +15,11 @@ final class AppCoordinator: NSObject {
         systemTranslator: systemTranslator
     )
     private lazy var popup = PopupController(settings: settings)
+    private lazy var manualTranslationController = ManualTranslationController(
+        settings: settings,
+        translator: translator,
+        systemTranslator: systemTranslator
+    )
     private let screenCapture = ScreenCaptureService()
     private let ocrService = OCRService()
     private let selectedTextService = SelectedTextService()
@@ -60,12 +65,26 @@ final class AppCoordinator: NSObject {
             .sink { [weak self] _ in self?.registerHotKeys() }
             .store(in: &cancellables)
 
+        settings.$manualShortcut
+            .dropFirst()
+            .sink { [weak self] _ in self?.registerHotKeys() }
+            .store(in: &cancellables)
+
         AppLog.app.info("iTrans started")
 
         handleDemoArgumentsIfNeeded()
         handleDemoSelectIfNeeded()
         handleDemoSelectionIfNeeded()
         handleDemoAudioIfNeeded()
+        handleDemoManualIfNeeded()
+    }
+
+    /// Development helper: `iTrans --demo-manual` shows a populated manual translation window.
+    private func handleDemoManualIfNeeded() {
+        guard CommandLine.arguments.contains("--demo-manual") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.manualTranslationController.showDemoWindow()
+        }
     }
 
     /// Development helper: `iTrans --demo-selection` shows a selection translation panel.
@@ -146,6 +165,9 @@ final class AppCoordinator: NSObject {
         }
         hotKeyManager.register(settings.audioShortcut) { [weak self] in
             self?.toggleAudioTranslation()
+        }
+        hotKeyManager.register(settings.manualShortcut) { [weak self] in
+            self?.toggleManualTranslation()
         }
     }
 
@@ -242,6 +264,14 @@ final class AppCoordinator: NSObject {
 
             presentPopup(text: text, origin: .selection)
         }
+    }
+
+    // MARK: - Manual translation
+
+    func toggleManualTranslation() {
+        guard !isBusy else { return }
+        popup.close()
+        manualTranslationController.toggle()
     }
 
     // MARK: - Audio translation

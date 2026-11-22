@@ -57,6 +57,11 @@ struct HotKeyShortcut: Codable, Equatable, Hashable {
         keyCode: 37, // L
         modifiers: NSEvent.ModifierFlags([.command, .option]).rawValue
     )
+
+    static let manualDefault = HotKeyShortcut(
+        keyCode: 46, // M
+        modifiers: NSEvent.ModifierFlags([.command, .option]).rawValue
+    )
 }
 
 enum KeyCodeNames {

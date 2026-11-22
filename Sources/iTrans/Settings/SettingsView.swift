@@ -20,7 +20,7 @@ struct SettingsView: View {
 
     /// Marketing version from Info.plist, shown in the About section.
     private static var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.1.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.2.0"
     }
 
     @State private var testState: TestState = .idle
@@ -330,8 +330,20 @@ struct SettingsView: View {
                 .font(.caption)
             }
 
-            if settings.ocrShortcut.isValid && settings.ocrShortcut == settings.selectionShortcut {
-                Label("两个快捷键相同，其中一个将无法生效", systemImage: "exclamationmark.triangle.fill")
+            HStack {
+                Text("手动翻译")
+                Spacer()
+                HotKeyRecorderView(shortcut: $settings.manualShortcut)
+                    .frame(width: 150, height: 24)
+                Button("恢复默认") {
+                    settings.manualShortcut = .manualDefault
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+            }
+
+            if let conflict = shortcutConflictMessage {
+                Label(conflict, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -342,6 +354,24 @@ struct SettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var shortcutConflictMessage: String? {
+        let entries: [(String, HotKeyShortcut)] = [
+            ("截图识别", settings.ocrShortcut),
+            ("划词翻译", settings.selectionShortcut),
+            ("手动翻译", settings.manualShortcut),
+            ("实时语音翻译", settings.audioShortcut)
+        ].filter { $0.1.isValid }
+
+        for i in entries.indices {
+            for j in entries.indices where j > i {
+                if entries[i].1 == entries[j].1 {
+                    return "「\(entries[i].0)」与「\(entries[j].0)」快捷键相同，其中一个将无法生效"
+                }
+            }
+        }
+        return nil
     }
 
     // MARK: - Permissions
